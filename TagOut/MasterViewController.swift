@@ -5,25 +5,32 @@
 //  Created by Maxim Kuzmenko on 2017-04-07.
 //  Copyright © 2017 Maxim Kuzmenko. All rights reserved.
 //
+//https://www.ioscreator.com/tutorials/editable-text-field-alert-controller-tutorial
 
 import UIKit
 
 class MasterViewController: UITableViewController {
 
-    var detailViewController: DetailViewController? = nil
+    var roomViewController: RoomViewController? = nil
     var objects = [Any]()
-
+    
+    @IBOutlet var table: UITableView!
+    var alertView: UIAlertController!;
+    var roomName: UITextField?
+    var rooms: [String] = [String]()
+    //var roomNameEntryTextfield: UITextField?
+    //var passwordTextField: UITextField?
 
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
         self.navigationItem.leftBarButtonItem = self.editButtonItem
 
-        let addButton = UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(insertNewObject(_:)))
+        let addButton = UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(createRoom(_:)))
         self.navigationItem.rightBarButtonItem = addButton
         if let split = self.splitViewController {
             let controllers = split.viewControllers
-            self.detailViewController = (controllers[controllers.count-1] as! UINavigationController).topViewController as? DetailViewController
+            self.roomViewController = (controllers[controllers.count-1] as! UINavigationController).topViewController as? RoomViewController
         }
     }
 
@@ -37,20 +44,41 @@ class MasterViewController: UITableViewController {
         // Dispose of any resources that can be recreated.
     }
 
-    func insertNewObject(_ sender: Any) {
-        objects.insert(NSDate(), at: 0)
-        let indexPath = IndexPath(row: 0, section: 0)
-        self.tableView.insertRows(at: [indexPath], with: .automatic)
+    func createRoom(_ sender: Any) {
+        alertView = UIAlertController(title: "Create Room", message: "", preferredStyle: UIAlertControllerStyle.alert);
+        
+        let createAction = UIAlertAction(
+        title: "Create", style: UIAlertActionStyle.default) {
+            (action) -> Void in
+            if (!self.rooms.contains((self.roomName?.text)!)) {
+                self.rooms.append((self.roomName?.text)!);
+                //send everyone the updated rooms
+                //self.table.reloadData();
+                self.performSegue(withIdentifier: "Room", sender: self)
+            }
+            else {
+                print("room already exists with this name");
+            }
+        }
+        
+        alertView.addTextField {
+            (txtRoomName) -> Void in
+            self.roomName = txtRoomName
+            self.roomName!.placeholder = "Enter Room Name Here"
+        }
+        
+        alertView.addAction(createAction)
+        self.present(alertView!, animated: true, completion: nil)
     }
 
     // MARK: - Segues
 
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        if segue.identifier == "showDetail" {
+        if segue.identifier == "Room" {
             if let indexPath = self.tableView.indexPathForSelectedRow {
-                let object = objects[indexPath.row] as! NSDate
-                let controller = (segue.destination as! UINavigationController).topViewController as! DetailViewController
-                controller.detailItem = object
+                let currRoom = rooms[indexPath.row]
+                let controller = (segue.destination as! UINavigationController).topViewController as! RoomViewController
+                controller.detailItem = currRoom
                 controller.navigationItem.leftBarButtonItem = self.splitViewController?.displayModeButtonItem
                 controller.navigationItem.leftItemsSupplementBackButton = true
             }
@@ -64,14 +92,14 @@ class MasterViewController: UITableViewController {
     }
 
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return objects.count
+        return rooms.count
     }
 
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "Cell", for: indexPath)
 
-        let object = objects[indexPath.row] as! NSDate
-        cell.textLabel!.text = object.description
+        let currRoom = rooms[indexPath.row]
+        cell.textLabel!.text = currRoom.description
         return cell
     }
 

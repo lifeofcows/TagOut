@@ -7,3 +7,7 @@
 //
 
 import Foundation
+
+protocol EventHandler {
+    func handleEvent(event: Event)
+}

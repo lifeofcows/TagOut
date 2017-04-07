@@ -7,3 +7,9 @@
 //
 
 import Foundation
+
+protocol Reactor {
+    func register(name: String, handler: EventHandler)
+    func deregister(name: String)
+    func dispatch(event: Event)
+}
