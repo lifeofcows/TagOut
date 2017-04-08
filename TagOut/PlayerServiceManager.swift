@@ -4,7 +4,7 @@ import MultipeerConnectivity
 protocol PlayerServiceManagerDelegate {
     
     func connectedDevicesChanged(manager : PlayerServiceManager, connectedDevices: [String])
-    //func colorChanged(manager : PlayerServiceManager, colorString: String)
+    func roomsChanged(manager : PlayerServiceManager, rooms: [[String: [String]]])
 }
 
 class PlayerServiceManager : NSObject {
@@ -21,7 +21,7 @@ class PlayerServiceManager : NSObject {
     var delegate : PlayerServiceManagerDelegate?
     
     lazy var session : MCSession = {
-        let session = MCSession(peer: self.myPeerId, securityIdentity: nil, encryptionPreference: .required)
+        let session = MCSession(peer: self.myPeerId, securityIdentity: nil, encryptionPreference: MCEncryptionPreference.none)
         session.delegate = self
         return session
     }()
@@ -37,14 +37,14 @@ class PlayerServiceManager : NSObject {
         
         self.serviceBrowser.delegate = self
         self.serviceBrowser.startBrowsingForPeers()
+        print("started browsing for peers")
     }
     
-    func send(colorName : String) {
-        NSLog("%@", "sendColor: \(colorName) to \(session.connectedPeers.count) peers")
-        
+    func send(rooms : [[String: [String]]]) {
         if session.connectedPeers.count > 0 {
             do {
-                try self.session.send(colorName.data(using: .utf8)!, toPeers: session.connectedPeers, with: .reliable)
+                let roomData = try? JSONSerialization.data(withJSONObject: rooms, options: [])
+                try self.session.send(roomData!, toPeers: session.connectedPeers, with: .reliable)
             }
             catch let error {
                 NSLog("%@", "Error for sending: \(error)")
@@ -80,8 +80,7 @@ extension PlayerServiceManager : MCNearbyServiceBrowserDelegate {
     }
     
     func browser(_ browser: MCNearbyServiceBrowser, foundPeer peerID: MCPeerID, withDiscoveryInfo info: [String : String]?) {
-        NSLog("%@", "foundPeer: \(peerID)")
-        NSLog("%@", "invitePeer: \(peerID)")
+        NSLog("%@", "foundPeer and invitePeer: \(peerID)")
         browser.invitePeer(peerID, to: self.session, withContext: nil, timeout: 10)
     }
     
@@ -94,15 +93,31 @@ extension PlayerServiceManager : MCNearbyServiceBrowserDelegate {
 extension PlayerServiceManager : MCSessionDelegate {
     
     func session(_ session: MCSession, peer peerID: MCPeerID, didChange state: MCSessionState) {
-        NSLog("%@", "peer \(peerID) didChangeState: \(state)")
+        var stateStr: String;
+        if state.rawValue == 0 {
+            stateStr = "Not Connected"
+        }
+        else if state.rawValue == 1 {
+            stateStr = "Connecting..."
+        }
+        else {
+            stateStr = "Connected!"
+        }
+        NSLog("%@", "peer \(peerID) didChangeState: \(stateStr): \(state.rawValue)")
+        
         self.delegate?.connectedDevicesChanged(manager: self, connectedDevices:
             session.connectedPeers.map{$0.displayName})
     }
     
     func session(_ session: MCSession, didReceive data: Data, fromPeer peerID: MCPeerID) {
         NSLog("%@", "didReceiveData: \(data)")
-        let str = String(data: data, encoding: .utf8)!
-        //self.delegate?.colorChanged(manager: self, colorString: str)
+        print("got room data!!");
+        if let roomObject = try? JSONSerialization.jsonObject(with: data, options: []) as! [[String: [String]]] {
+            self.delegate?.roomsChanged(manager: self, rooms: roomObject)
+        }
+        else { //other object (position)
+            
+        }
     }
     
     func session(_ session: MCSession, didReceive stream: InputStream, withName streamName: String, fromPeer peerID: MCPeerID) {

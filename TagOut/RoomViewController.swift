@@ -8,37 +8,48 @@
 
 import UIKit
 
-class RoomViewController: UIViewController {
+class RoomViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
 
-    @IBOutlet weak var detailDescriptionLabel: UILabel!
-
-    func configureView() {
-        // Update the user interface for the detail item.
-        if let detail = self.detailItem {
-            if let label = self.detailDescriptionLabel {
-                label.text = detail.description
-            }
-        }
-    }
-
+    @IBOutlet weak var table: UITableView!
+    
     override func viewDidLoad() {
         super.viewDidLoad()
-        // Do any additional setup after loading the view, typically from a nib.
-        self.configureView()
+        table.isUserInteractionEnabled = false;
     }
 
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
-        // Dispose of any resources that can be recreated.
     }
-
-    var detailItem: String? {
+    
+    public func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        return players!.count;
+    }
+    
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        let cell = tableView.dequeueReusableCell(withIdentifier: "Cell", for: indexPath)
+        cell.textLabel!.text = players![indexPath.row]
+        return cell
+    }
+    
+    var roomName: String? {
         didSet {
-            // Update the view.
-            self.configureView()
+            self.title = "Room: \(roomName!)";
         }
     }
-
-
+    
+    var players: [String]? {
+        didSet {
+            print("players in \(roomName!) are now: ");
+            for i in players! {
+                print("\(i), ")
+            }
+        }
+    }
+    
+    var roomIndex: Int? { //if room index shifts in dictionary
+        didSet {
+            
+        }
+    }
 }
 

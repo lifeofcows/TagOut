@@ -4,8 +4,6 @@
 //
 //  Created by Maxim Kuzmenko on 2017-04-07.
 //  Copyright © 2017 Maxim Kuzmenko. All rights reserved.
-//
-//https://www.ioscreator.com/tutorials/editable-text-field-alert-controller-tutorial
 
 import UIKit
 
@@ -14,24 +12,40 @@ class MasterViewController: UITableViewController {
     var roomViewController: RoomViewController? = nil
     var objects = [Any]()
     
+    let playerService = PlayerServiceManager()
     @IBOutlet var table: UITableView!
     var alertView: UIAlertController!;
-    var roomName: UITextField?
-    var rooms: [String] = [String]()
-    //var roomNameEntryTextfield: UITextField?
-    //var passwordTextField: UITextField?
+    weak var roomCreationAction : UIAlertAction?
 
+    var roomName: UITextField?
+    var userName: String = "test";
+    var creatorRoomIndex: Int!;
+    var didUpdateRooms: Bool = false;
+    
+    var rooms: [[String: [String]]] = [] { //array of roomname: roompeople dictionary
+        didSet {
+            if didUpdateRooms == false { //prevent from making an infinite loop
+                print("sending didUpdateRooms msg");
+                playerService.send(rooms: rooms);
+            }
+        }
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
-        // Do any additional setup after loading the view, typically from a nib.
-        self.navigationItem.leftBarButtonItem = self.editButtonItem
-
+        playerService.delegate = self;
+        table.isUserInteractionEnabled = false; //turn off user interaction until table is fully loaded
+        
         let addButton = UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(createRoom(_:)))
         self.navigationItem.rightBarButtonItem = addButton
         if let split = self.splitViewController {
             let controllers = split.viewControllers
             self.roomViewController = (controllers[controllers.count-1] as! UINavigationController).topViewController as? RoomViewController
         }
+        
+        //get rooms
+        
+        table.isUserInteractionEnabled = true;
     }
 
     override func viewWillAppear(_ animated: Bool) {
@@ -41,82 +55,123 @@ class MasterViewController: UITableViewController {
 
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
-        // Dispose of any resources that can be recreated.
     }
 
     func createRoom(_ sender: Any) {
-        alertView = UIAlertController(title: "Create Room", message: "", preferredStyle: UIAlertControllerStyle.alert);
+        let alert = UIAlertController(title: "Create Room", message: "", preferredStyle: UIAlertControllerStyle.alert)
         
-        let createAction = UIAlertAction(
-        title: "Create", style: UIAlertActionStyle.default) {
-            (action) -> Void in
-            if (!self.rooms.contains((self.roomName?.text)!)) {
-                self.rooms.append((self.roomName?.text)!);
-                //send everyone the updated rooms
-                //self.table.reloadData();
-                self.performSegue(withIdentifier: "Room", sender: self)
-            }
-            else {
-                print("room already exists with this name");
-            }
-        }
+        alert.addTextField(configurationHandler: {(textField: UITextField) in
+            textField.placeholder = "Enter Room Name Here"
+            textField.addTarget(self, action: #selector(self.textChanged(_:)), for: .editingChanged)
+        })
         
-        alertView.addTextField {
-            (txtRoomName) -> Void in
-            self.roomName = txtRoomName
-            self.roomName!.placeholder = "Enter Room Name Here"
-        }
+        let cancel = UIAlertAction(title: "Cancel", style: UIAlertActionStyle.cancel, handler: { (_) -> Void in
+        })
         
-        alertView.addAction(createAction)
-        self.present(alertView!, animated: true, completion: nil)
+        let action = UIAlertAction(title: "Create", style: UIAlertActionStyle.default, handler: { (_) -> Void in
+            let textfield = alert.textFields!.first!
+            self.rooms.append([textfield.text!: [self.userName]]); //create room with the user
+            self.creatorRoomIndex = self.rooms.count-1;
+            self.performSegue(withIdentifier: "showRoom", sender: self)
+        })
+        
+        alert.addAction(cancel)
+        alert.addAction(action)
+        
+        self.roomCreationAction = action
+        action.isEnabled = false
+        self.present(alert, animated: true, completion: nil)
     }
-
+    
+    @objc private func textChanged(_ sender:Any) {
+        let text = (sender as! UITextField).text
+        
+        for room in (self.rooms) {
+            if room[text!] != nil { //room exists
+                self.roomCreationAction?.isEnabled = false; //keep as false
+                return;
+            }
+        }
+        
+        self.roomCreationAction?.isEnabled = (text! != "") //now need to only check if nothing entered
+    }
+    
+    func printAllRooms() {
+        for room in rooms {
+            let roomNameTxt = ([String] (room.keys))[0];
+            print("Room is \(roomNameTxt)");
+        }
+    }
+    
     // MARK: - Segues
-
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        if segue.identifier == "Room" {
+        if segue.identifier == "showRoom" { //segue for room selector
+            let controller = (segue.destination as! UINavigationController).topViewController as! RoomViewController
+            controller.navigationItem.leftBarButtonItem = self.splitViewController?.displayModeButtonItem
+            controller.navigationItem.leftItemsSupplementBackButton = true
+            
             if let indexPath = self.tableView.indexPathForSelectedRow {
-                let currRoom = rooms[indexPath.row]
-                let controller = (segue.destination as! UINavigationController).topViewController as! RoomViewController
-                controller.detailItem = currRoom
-                controller.navigationItem.leftBarButtonItem = self.splitViewController?.displayModeButtonItem
-                controller.navigationItem.leftItemsSupplementBackButton = true
+                let currRoom = rooms[indexPath.row];
+                let roomNameTxt = ([String] (currRoom.keys))[0];
+                var personArr = rooms[indexPath.row][roomNameTxt];
+                personArr?.append(userName);
+                rooms[indexPath.row][roomNameTxt] = personArr;
+                controller.players = rooms[indexPath.row][roomNameTxt]
+            }
+            else { //segue for room creator
+                let currRoom = rooms[creatorRoomIndex];
+                let roomNameTxt = ([String] (currRoom.keys))[0];
+                controller.roomName = roomNameTxt; //currRoom
+                controller.players = rooms[creatorRoomIndex][roomNameTxt]
             }
         }
     }
 
     // MARK: - Table View
-
-    override func numberOfSections(in tableView: UITableView) -> Int {
-        return 1
-    }
-
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return rooms.count
     }
 
+    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        print("index path is \(indexPath.row)");
+    }
+    
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "Cell", for: indexPath)
 
-        let currRoom = rooms[indexPath.row]
-        cell.textLabel!.text = currRoom.description
+        let currRoom = ([String] (rooms[indexPath.row].keys))[0]
+        cell.textLabel!.text = currRoom;
         return cell
     }
-
-    override func tableView(_ tableView: UITableView, canEditRowAt indexPath: IndexPath) -> Bool {
-        // Return false if you do not want the specified item to be editable.
-        return true
-    }
-
-    override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCellEditingStyle, forRowAt indexPath: IndexPath) {
-        if editingStyle == .delete {
-            objects.remove(at: indexPath.row)
-            tableView.deleteRows(at: [indexPath], with: .fade)
-        } else if editingStyle == .insert {
-            // Create a new instance of the appropriate class, insert it into the array, and add a new row to the table view.
-        }
-    }
-
-
 }
 
+extension MasterViewController : PlayerServiceManagerDelegate {
+    
+    func connectedDevicesChanged(manager: PlayerServiceManager, connectedDevices: [String]) {
+        DispatchQueue.main.async {
+            print("Connections: \(connectedDevices)"); //update here
+            
+            //self.table.reloadData();
+        }
+    }
+    
+    func roomsChanged(manager: PlayerServiceManager, rooms: [[String: [String]]]) {
+        DispatchQueue.main.async {
+            print("updating rooms");
+            self.didUpdateRooms = true;
+            self.rooms = rooms;
+            self.didUpdateRooms = false;
+            self.table.reloadData();
+        }
+    }
+    //OperationQueue.main.addOperation {
+    /*switch colorString {
+     case "red":
+     self.change(color: .red)
+     case "yellow":
+     self.change(color: .yellow)
+     default:
+     NSLog("%@", "Unknown color value received: \(colorString)")
+     }*/
+
+}

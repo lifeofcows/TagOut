@@ -130,8 +130,8 @@
 			children = (
 				100603511E974E440091A361 /* AppDelegate.swift */,
 				100603531E974E440091A361 /* MasterViewController.swift */,
-				1006039E1E975C640091A361 /* PlayerServiceManager.swift */,
 				100603551E974E440091A361 /* RoomViewController.swift */,
+				1006039E1E975C640091A361 /* PlayerServiceManager.swift */,
 				100603971E9751D00091A361 /* Connection.swift */,
 				100603921E9750030091A361 /* Game */,
 				100603831E974F320091A361 /* Server */,
@@ -491,6 +491,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				DEVELOPMENT_TEAM = 4Q62JEQ35G;
 				INFOPLIST_FILE = TagOut/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.3;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = MaximKuzmenko.TagOut;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -507,6 +508,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				DEVELOPMENT_TEAM = 4Q62JEQ35G;
 				INFOPLIST_FILE = TagOut/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.3;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = MaximKuzmenko.TagOut;
 				PRODUCT_NAME = "$(TARGET_NAME)";
