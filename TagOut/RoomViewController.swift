@@ -39,7 +39,7 @@ class RoomViewController: UIViewController, UITableViewDataSource, UITableViewDe
     
     var players: [String]? {
         didSet {
-            print("players in \(roomName!) are now: ");
+            //print("players in \(roomName!) are now: ");
             for i in players! {
                 print("\(i), ")
             }

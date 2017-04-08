@@ -8,7 +8,7 @@
 import UIKit
 
 class MasterViewController: UITableViewController {
-
+    
     var roomViewController: RoomViewController? = nil
     var objects = [Any]()
     
@@ -18,9 +18,10 @@ class MasterViewController: UITableViewController {
     weak var roomCreationAction : UIAlertAction?
 
     var roomName: UITextField?
-    var userName: String = "test";
+    var userName: String!;
     var creatorRoomIndex: Int!;
     var didUpdateRooms: Bool = false;
+    var didGetRooms: Bool = false;
     
     var rooms: [[String: [String]]] = [] { //array of roomname: roompeople dictionary
         didSet {
@@ -28,24 +29,25 @@ class MasterViewController: UITableViewController {
                 print("sending didUpdateRooms msg");
                 playerService.send(rooms: rooms);
             }
+            if (!didGetRooms) { //wait until rooms are loaded (set by another peer) then turn on userInteraction
+                didGetRooms = true;
+                table.isUserInteractionEnabled = true;
+            }
         }
     }
     
     override func viewDidLoad() {
         super.viewDidLoad()
+       // MasterViewController.instance = self;
         playerService.delegate = self;
         table.isUserInteractionEnabled = false; //turn off user interaction until table is fully loaded
-        
+        userName = randomString(length: 6);
         let addButton = UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(createRoom(_:)))
         self.navigationItem.rightBarButtonItem = addButton
         if let split = self.splitViewController {
             let controllers = split.viewControllers
             self.roomViewController = (controllers[controllers.count-1] as! UINavigationController).topViewController as? RoomViewController
         }
-        
-        //get rooms
-        
-        table.isUserInteractionEnabled = true;
     }
 
     override func viewWillAppear(_ animated: Bool) {
@@ -143,6 +145,23 @@ class MasterViewController: UITableViewController {
         cell.textLabel!.text = currRoom;
         return cell
     }
+    
+    //gen random string
+    func randomString(length: Int) -> String {
+        
+        let letters : NSString = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+        let len = UInt32(letters.length)
+        
+        var randomString = ""
+        
+        for _ in 0 ..< length {
+            let rand = arc4random_uniform(len)
+            var nextChar = letters.character(at: Int(rand))
+            randomString += NSString(characters: &nextChar, length: 1) as String
+        }
+        
+        return randomString
+    }
 }
 
 extension MasterViewController : PlayerServiceManagerDelegate {
@@ -164,14 +183,15 @@ extension MasterViewController : PlayerServiceManagerDelegate {
             self.table.reloadData();
         }
     }
-    //OperationQueue.main.addOperation {
-    /*switch colorString {
-     case "red":
-     self.change(color: .red)
-     case "yellow":
-     self.change(color: .yellow)
-     default:
-     NSLog("%@", "Unknown color value received: \(colorString)")
-     }*/
-
+    
+    func getRooms()->[[String: [String]]] {
+        return rooms;
+    }
+    
+    
+    
+    /*various issues:
+     don't show room if at least one player in room is not within wifi/bluetooth viscinity. (later problem)
+     
+    */
 }

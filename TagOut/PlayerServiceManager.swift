@@ -2,13 +2,13 @@ import Foundation
 import MultipeerConnectivity
 
 protocol PlayerServiceManagerDelegate {
-    
     func connectedDevicesChanged(manager : PlayerServiceManager, connectedDevices: [String])
     func roomsChanged(manager : PlayerServiceManager, rooms: [[String: [String]]])
+    func getRooms()->[[String: [String]]];
 }
 
 class PlayerServiceManager : NSObject {
-    
+
     // Service type must be a unique string, at most 15 characters long
     // and can contain only ASCII lowercase letters, numbers and hyphens.
     private let PlayerServiceType = "tagout-service"
@@ -17,6 +17,9 @@ class PlayerServiceManager : NSObject {
     
     private let serviceAdvertiser : MCNearbyServiceAdvertiser
     private let serviceBrowser : MCNearbyServiceBrowser
+    
+    var isFirst: Bool = true;
+    var Verified: Bool = false;
     
     var delegate : PlayerServiceManagerDelegate?
     
@@ -57,7 +60,6 @@ class PlayerServiceManager : NSObject {
         self.serviceAdvertiser.stopAdvertisingPeer()
         self.serviceBrowser.stopBrowsingForPeers()
     }
-    
 }
 
 extension PlayerServiceManager : MCNearbyServiceAdvertiserDelegate {
@@ -69,8 +71,9 @@ extension PlayerServiceManager : MCNearbyServiceAdvertiserDelegate {
     func advertiser(_ advertiser: MCNearbyServiceAdvertiser, didReceiveInvitationFromPeer peerID: MCPeerID, withContext context: Data?, invitationHandler: @escaping (Bool, MCSession?) -> Void) {
         NSLog("%@", "didReceiveInvitationFromPeer \(peerID)")
         invitationHandler(true, self.session)
+        isFirst = false;
+        //send(rooms: (delegate?.getRooms())!); //send rooms to newly connected peer
     }
-    
 }
 
 extension PlayerServiceManager : MCNearbyServiceBrowserDelegate {
@@ -81,14 +84,15 @@ extension PlayerServiceManager : MCNearbyServiceBrowserDelegate {
     
     func browser(_ browser: MCNearbyServiceBrowser, foundPeer peerID: MCPeerID, withDiscoveryInfo info: [String : String]?) {
         NSLog("%@", "foundPeer and invitePeer: \(peerID)")
+        if (isFirst) { Verified = true; }
         browser.invitePeer(peerID, to: self.session, withContext: nil, timeout: 10)
     }
     
     func browser(_ browser: MCNearbyServiceBrowser, lostPeer peerID: MCPeerID) {
         NSLog("%@", "lostPeer: \(peerID)")
     }
-    
 }
+
 
 extension PlayerServiceManager : MCSessionDelegate {
     
@@ -102,6 +106,9 @@ extension PlayerServiceManager : MCSessionDelegate {
         }
         else {
             stateStr = "Connected!"
+            if (!Verified) { //a mobile device connected, so send all apps an update in roomData.
+                send(rooms: (delegate?.getRooms())!);
+            }
         }
         NSLog("%@", "peer \(peerID) didChangeState: \(stateStr): \(state.rawValue)")
         
