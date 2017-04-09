@@ -15,7 +15,6 @@ class MasterViewController: UITableViewController {
     
     let playerService = PlayerServiceManager()
     @IBOutlet var table: UITableView!
-    var alertView: UIAlertController!;
     weak var roomCreationAction : UIAlertAction?
     
     var roomName: UITextField?
@@ -30,7 +29,7 @@ class MasterViewController: UITableViewController {
         didSet {
             if didUpdateRooms == false { //prevent from making an infinite loop
                 print("sending didUpdateRooms msg");
-                playerService.send(rooms: rooms);
+                playerService.send(obj: rooms);
             }
             if (!didGetRooms) { //wait until rooms are loaded (set by another peer) then turn on userInteraction
                 didGetRooms = true;
@@ -115,6 +114,10 @@ class MasterViewController: UITableViewController {
         }
         
         self.roomCreationAction?.isEnabled = (text! != "") //now need to only check if nothing entered
+    }
+    
+    func notifyGameBegin(roomName: String) {
+        
     }
     
     func printAllRooms() {
@@ -213,15 +216,13 @@ class MasterViewController: UITableViewController {
 
 extension MasterViewController : PlayerServiceManagerDelegate {
     
-    func connectedDevicesChanged(manager: PlayerServiceManager, connectedDevices: [String]) {
+    func connectedDevicesChanged(connectedDevices: [String]) {
         DispatchQueue.main.async {
             print("Connections: \(connectedDevices)"); //update here
-            
-            //self.table.reloadData();
         }
     }
     
-    func roomsChanged(manager: PlayerServiceManager, rooms: [[String: [String]]]) {
+    func roomsChanged(rooms: [[String: [String]]]) {
         DispatchQueue.main.async {
             print("updating rooms");
             self.didUpdateRooms = true;
@@ -235,6 +236,9 @@ extension MasterViewController : PlayerServiceManagerDelegate {
         return rooms;
     }
     
+    func gameBegin() {
+        RoomViewController.instance?.playGame(_: Any)
+    }
     /*various issues:
      don't show room if at least one player in room is not within wifi/bluetooth viscinity. (later problem)
      room doesnt update sometimes for some reason

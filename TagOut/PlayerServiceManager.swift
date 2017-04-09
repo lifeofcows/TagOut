@@ -2,9 +2,10 @@ import Foundation
 import MultipeerConnectivity
 
 protocol PlayerServiceManagerDelegate {
-    func connectedDevicesChanged(manager : PlayerServiceManager, connectedDevices: [String])
-    func roomsChanged(manager : PlayerServiceManager, rooms: [[String: [String]]])
+    func connectedDevicesChanged(connectedDevices: [String])
+    func roomsChanged(rooms: [[String: [String]]])
     func getRooms()->[[String: [String]]];
+    func gameBegin();
 }
 
 class PlayerServiceManager : NSObject {
@@ -42,21 +43,18 @@ class PlayerServiceManager : NSObject {
         DispatchQueue.main.asyncAfter(deadline: .now() + 3.5, execute: { //wait for operations to complete on other ends before allowing the creation of a new room
             MasterViewController.instance?.navigationItem.rightBarButtonItem?.isEnabled = true;
         })
-
-        print("started browsing for peers")
     }
     
-    func send(rooms : [[String: [String]]]) {
+    func send(obj : Any) {
         if session.connectedPeers.count > 0 {
             do {
-                let roomData = try? JSONSerialization.data(withJSONObject: rooms, options: [])
-                try self.session.send(roomData!, toPeers: session.connectedPeers, with: .reliable)
+                let json = try? JSONSerialization.data(withJSONObject: obj, options: [])
+                try self.session.send(json!, toPeers: session.connectedPeers, with: .reliable)
             }
             catch let error {
                 NSLog("%@", "Error for sending: \(error)")
             }
         }
-        
     }
     
     deinit {
@@ -75,7 +73,6 @@ extension PlayerServiceManager : MCNearbyServiceAdvertiserDelegate {
         NSLog("%@", "didReceiveInvitationFromPeer \(peerID)")
         invitationHandler(true, self.session)
         isFirst = false;
-        //send(rooms: (delegate?.getRooms())!); //send rooms to newly connected peer
     }
 }
 
@@ -110,13 +107,12 @@ extension PlayerServiceManager : MCSessionDelegate {
         else {
             stateStr = "Connected!"
             if (!Verified) { //a mobile device connected, so send all apps an update in roomData.
-                //print("sending data to peers again...");
-                send(rooms: (delegate?.getRooms())!);
+                send(obj: (delegate?.getRooms())!);
             }
         }
         NSLog("%@", "peer \(peerID) didChangeState: \(stateStr): \(state.rawValue)")
         
-        self.delegate?.connectedDevicesChanged(manager: self, connectedDevices:
+        self.delegate?.connectedDevicesChanged(connectedDevices:
             session.connectedPeers.map{$0.displayName})
     }
     
@@ -124,7 +120,10 @@ extension PlayerServiceManager : MCSessionDelegate {
         NSLog("%@", "didReceiveData: \(data)")
         print("got room data!!");
         if let roomObject = try? JSONSerialization.jsonObject(with: data, options: []) as! [[String: [String]]] {
-            self.delegate?.roomsChanged(manager: self, rooms: roomObject)
+            self.delegate?.roomsChanged(rooms: roomObject)
+        }
+        else if (try? JSONSerialization.jsonObject(with: data, options: []) as! Bool) != nil { //game began
+            self.delegate?.gameBegin()
         }
         else { //other object (position)
             
