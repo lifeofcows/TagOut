@@ -9,6 +9,7 @@ import UIKit
 
 class MasterViewController: UITableViewController {
     
+    static var instance: MasterViewController!;
     var roomViewController: RoomViewController? = nil
     var objects = [Any]()
     
@@ -16,12 +17,14 @@ class MasterViewController: UITableViewController {
     @IBOutlet var table: UITableView!
     var alertView: UIAlertController!;
     weak var roomCreationAction : UIAlertAction?
-
+    
     var roomName: UITextField?
     var userName: String!;
     var creatorRoomIndex: Int!;
     var didUpdateRooms: Bool = false;
     var didGetRooms: Bool = false;
+    var currRoomName: String?;
+    var controller: RoomViewController? = nil;
     
     var rooms: [[String: [String]]] = [] { //array of roomname: roompeople dictionary
         didSet {
@@ -33,32 +36,46 @@ class MasterViewController: UITableViewController {
                 didGetRooms = true;
                 table.isUserInteractionEnabled = true;
             }
+            updateRoomPlayers();
+        }
+    }
+    
+    func updateRoomPlayers() { //function updates room
+        if currRoomName != nil {
+            for i in 0..<rooms.count {
+                if rooms[i][currRoomName!] != nil {
+                    controller?.players = rooms[i][currRoomName!];
+                    return;
+                }
+            }
         }
     }
     
     override func viewDidLoad() {
         super.viewDidLoad()
-       // MasterViewController.instance = self;
+        MasterViewController.instance = self;
         playerService.delegate = self;
         table.isUserInteractionEnabled = false; //turn off user interaction until table is fully loaded
         userName = randomString(length: 6);
+        print("userName is \(userName!)")
         let addButton = UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(createRoom(_:)))
         self.navigationItem.rightBarButtonItem = addButton
+        self.navigationItem.rightBarButtonItem?.isEnabled = false;
         if let split = self.splitViewController {
             let controllers = split.viewControllers
             self.roomViewController = (controllers[controllers.count-1] as! UINavigationController).topViewController as? RoomViewController
         }
     }
-
+    
     override func viewWillAppear(_ animated: Bool) {
         self.clearsSelectionOnViewWillAppear = self.splitViewController!.isCollapsed
         super.viewWillAppear(animated)
     }
-
+    
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
     }
-
+    
     func createRoom(_ sender: Any) {
         let alert = UIAlertController(title: "Create Room", message: "", preferredStyle: UIAlertControllerStyle.alert)
         
@@ -72,8 +89,10 @@ class MasterViewController: UITableViewController {
         
         let action = UIAlertAction(title: "Create", style: UIAlertActionStyle.default, handler: { (_) -> Void in
             let textfield = alert.textFields!.first!
-            self.rooms.append([textfield.text!: [self.userName]]); //create room with the user
-            self.creatorRoomIndex = self.rooms.count-1;
+            self.currRoomName = textfield.text!;
+            self.rooms.append([self.currRoomName!: [self.userName]]); //create room with the user
+            self.table.reloadData();
+            self.creatorRoomIndex = self.rooms.count - 1;
             self.performSegue(withIdentifier: "showRoom", sender: self)
         })
         
@@ -105,42 +124,70 @@ class MasterViewController: UITableViewController {
         }
     }
     
+    func personDidLeaveRoom(roomName: String) {
+        currRoomName = nil;
+        print("person leaving room");
+        for i in 0...rooms.count-1 {
+            if let room = rooms[i][roomName] {
+                let index = room.index(of: userName!);
+                var personArray = room
+                personArray.remove(at: index!);
+                if personArray.count == 0 {
+                    rooms.remove(at: i);
+                    table.reloadData();
+                }
+                else {
+                    rooms[i][roomName] = personArray;
+                }
+                print("removed \(userName!) from room")
+                return;
+            }
+        }
+    }
+    
     // MARK: - Segues
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         if segue.identifier == "showRoom" { //segue for room selector
-            let controller = (segue.destination as! UINavigationController).topViewController as! RoomViewController
-            controller.navigationItem.leftBarButtonItem = self.splitViewController?.displayModeButtonItem
-            controller.navigationItem.leftItemsSupplementBackButton = true
+            controller = (segue.destination as! UINavigationController).topViewController as! RoomViewController?
+            controller?.navigationItem.leftBarButtonItem = self.splitViewController?.displayModeButtonItem
+            controller?.navigationItem.leftItemsSupplementBackButton = true
             
             if let indexPath = self.tableView.indexPathForSelectedRow {
-                let currRoom = rooms[indexPath.row];
-                let roomNameTxt = ([String] (currRoom.keys))[0];
-                var personArr = rooms[indexPath.row][roomNameTxt];
-                personArr?.append(userName);
-                rooms[indexPath.row][roomNameTxt] = personArr;
-                controller.players = rooms[indexPath.row][roomNameTxt]
+                addToRoom(index: indexPath.row);
+                
             }
             else { //segue for room creator
                 let currRoom = rooms[creatorRoomIndex];
                 let roomNameTxt = ([String] (currRoom.keys))[0];
-                controller.roomName = roomNameTxt; //currRoom
-                controller.players = rooms[creatorRoomIndex][roomNameTxt]
+                controller?.roomName = roomNameTxt; //currRoom
+                controller?.players = rooms[creatorRoomIndex][roomNameTxt]
             }
         }
     }
-
+    
+    func addToRoom(index: Int) {
+        print("adding \(userName!) to room")
+        let currRoom = rooms[index];
+        currRoomName = ([String] (currRoom.keys))[0];
+        var personArr = rooms[index][currRoomName!];
+        personArr?.append(userName);
+        rooms[index][currRoomName!] = personArr;
+        controller?.roomName = currRoomName; //currRoom
+        controller?.players = rooms[index][currRoomName!]
+    }
+    
     // MARK: - Table View
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return rooms.count
     }
-
+    
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         print("index path is \(indexPath.row)");
     }
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "Cell", for: indexPath)
-
+        
         let currRoom = ([String] (rooms[indexPath.row].keys))[0]
         cell.textLabel!.text = currRoom;
         return cell
@@ -188,10 +235,8 @@ extension MasterViewController : PlayerServiceManagerDelegate {
         return rooms;
     }
     
-    
-    
     /*various issues:
      don't show room if at least one player in room is not within wifi/bluetooth viscinity. (later problem)
-     
-    */
+     room doesnt update sometimes for some reason
+     */
 }

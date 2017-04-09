@@ -9,20 +9,31 @@
 import UIKit
 
 class RoomViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
-
     @IBOutlet weak var table: UITableView!
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        table.delegate = self
+        table.dataSource = self
         table.isUserInteractionEnabled = false;
     }
 
+    override func viewWillDisappear(_ animated: Bool) {
+        if !self.isMovingFromParentViewController {
+            MasterViewController.instance?.personDidLeaveRoom(roomName: roomName!);
+        }
+    }
+    
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
     }
     
     public func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return players!.count;
+    }
+    
+    public func numberOfSections(in tableView: UITableView) -> Int {
+        return 1;
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
@@ -39,16 +50,14 @@ class RoomViewController: UIViewController, UITableViewDataSource, UITableViewDe
     
     var players: [String]? {
         didSet {
-            //print("players in \(roomName!) are now: ");
             for i in players! {
                 print("\(i), ")
             }
-        }
-    }
-    
-    var roomIndex: Int? { //if room index shifts in dictionary
-        didSet {
-            
+            if table != nil {
+                DispatchQueue.main.async {
+                    self.table.reloadData();
+                }
+            }
         }
     }
 }

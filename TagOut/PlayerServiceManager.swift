@@ -20,7 +20,6 @@ class PlayerServiceManager : NSObject {
     
     var isFirst: Bool = true;
     var Verified: Bool = false;
-    
     var delegate : PlayerServiceManagerDelegate?
     
     lazy var session : MCSession = {
@@ -40,6 +39,10 @@ class PlayerServiceManager : NSObject {
         
         self.serviceBrowser.delegate = self
         self.serviceBrowser.startBrowsingForPeers()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3.5, execute: { //wait for operations to complete on other ends before allowing the creation of a new room
+            MasterViewController.instance?.navigationItem.rightBarButtonItem?.isEnabled = true;
+        })
+
         print("started browsing for peers")
     }
     
@@ -107,6 +110,7 @@ extension PlayerServiceManager : MCSessionDelegate {
         else {
             stateStr = "Connected!"
             if (!Verified) { //a mobile device connected, so send all apps an update in roomData.
+                //print("sending data to peers again...");
                 send(rooms: (delegate?.getRooms())!);
             }
         }
