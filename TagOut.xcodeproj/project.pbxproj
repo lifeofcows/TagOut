@@ -23,10 +23,9 @@
 		1006038D1E974F890091A361 /* JSONEventStream.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1006038C1E974F890091A361 /* JSONEventStream.swift */; };
 		1006038F1E974F990091A361 /* Reactor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1006038E1E974F990091A361 /* Reactor.swift */; };
 		100603911E974F9F0091A361 /* ReactorImpl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100603901E974F9F0091A361 /* ReactorImpl.swift */; };
-		100603961E9751970091A361 /* Game.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100603951E9751970091A361 /* Game.swift */; };
-		100603981E9751D00091A361 /* Connection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100603971E9751D00091A361 /* Connection.swift */; };
 		1006039C1E9752440091A361 /* GCDAsyncSocket.m in Sources */ = {isa = PBXBuildFile; fileRef = 1006039B1E9752440091A361 /* GCDAsyncSocket.m */; };
 		1006039F1E975C640091A361 /* PlayerServiceManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1006039E1E975C640091A361 /* PlayerServiceManager.swift */; };
+		102C45361E9A0BF700781BF9 /* GameViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 102C45351E9A0BF700781BF9 /* GameViewController.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -69,12 +68,11 @@
 		1006038C1E974F890091A361 /* JSONEventStream.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = JSONEventStream.swift; sourceTree = "<group>"; };
 		1006038E1E974F990091A361 /* Reactor.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Reactor.swift; sourceTree = "<group>"; };
 		100603901E974F9F0091A361 /* ReactorImpl.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ReactorImpl.swift; sourceTree = "<group>"; };
-		100603951E9751970091A361 /* Game.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Game.swift; path = ../Game.swift; sourceTree = "<group>"; };
-		100603971E9751D00091A361 /* Connection.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Connection.swift; sourceTree = "<group>"; };
 		100603991E9752430091A361 /* TagOut-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "TagOut-Bridging-Header.h"; sourceTree = "<group>"; };
 		1006039A1E9752440091A361 /* GCDAsyncSocket.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GCDAsyncSocket.h; path = TagOut/GCDAsyncSocket.h; sourceTree = "<group>"; };
 		1006039B1E9752440091A361 /* GCDAsyncSocket.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = GCDAsyncSocket.m; path = TagOut/GCDAsyncSocket.m; sourceTree = "<group>"; };
 		1006039E1E975C640091A361 /* PlayerServiceManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PlayerServiceManager.swift; sourceTree = "<group>"; };
+		102C45351E9A0BF700781BF9 /* GameViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GameViewController.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -132,8 +130,7 @@
 				100603531E974E440091A361 /* MasterViewController.swift */,
 				100603551E974E440091A361 /* RoomViewController.swift */,
 				1006039E1E975C640091A361 /* PlayerServiceManager.swift */,
-				100603971E9751D00091A361 /* Connection.swift */,
-				100603921E9750030091A361 /* Game */,
+				102C45351E9A0BF700781BF9 /* GameViewController.swift */,
 				100603831E974F320091A361 /* Server */,
 				100603571E974E440091A361 /* Main.storyboard */,
 				1006035A1E974E440091A361 /* Assets.xcassets */,
@@ -174,14 +171,6 @@
 				100603901E974F9F0091A361 /* ReactorImpl.swift */,
 			);
 			name = Server;
-			sourceTree = "<group>";
-		};
-		100603921E9750030091A361 /* Game */ = {
-			isa = PBXGroup;
-			children = (
-				100603951E9751970091A361 /* Game.swift */,
-			);
-			name = Game;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -322,7 +311,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				100603981E9751D00091A361 /* Connection.swift in Sources */,
 				100603561E974E440091A361 /* RoomViewController.swift in Sources */,
 				100603911E974F9F0091A361 /* ReactorImpl.swift in Sources */,
 				100603891E974F750091A361 /* EventStream.swift in Sources */,
@@ -330,10 +318,10 @@
 				100603871E974F680091A361 /* EventHandler.swift in Sources */,
 				1006038F1E974F990091A361 /* Reactor.swift in Sources */,
 				1006038D1E974F890091A361 /* JSONEventStream.swift in Sources */,
-				100603961E9751970091A361 /* Game.swift in Sources */,
 				100603821E974F2F0091A361 /* AcceptorReactor.swift in Sources */,
 				100603541E974E440091A361 /* MasterViewController.swift in Sources */,
 				100603521E974E440091A361 /* AppDelegate.swift in Sources */,
+				102C45361E9A0BF700781BF9 /* GameViewController.swift in Sources */,
 				1006039C1E9752440091A361 /* GCDAsyncSocket.m in Sources */,
 				100603851E974F600091A361 /* Event.swift in Sources */,
 				1006039F1E975C640091A361 /* PlayerServiceManager.swift in Sources */,

@@ -14,7 +14,7 @@ class RoomViewController: UIViewController, UITableViewDataSource, UITableViewDe
     var gameAlert: UIAlertController!;
     var isAdmin: Bool = false;
     var countdownTime: Int = 5;
-    var timer: Timer = Timer();
+    var timer: Timer!;
     static var instance: RoomViewController!
     
     override func viewDidLoad() {
@@ -26,14 +26,25 @@ class RoomViewController: UIViewController, UITableViewDataSource, UITableViewDe
         if MasterViewController.instance?.userName == players?[0] { //admin notification for room creator
             adminNotification();
         }
+        self.navigationItem.hidesBackButton = true
+        
+        let newBackButton = UIBarButtonItem(title: "Back", style: UIBarButtonItemStyle.plain, target: self, action: #selector(RoomViewController.back(sender:)))
+        self.navigationItem.leftBarButtonItem = newBackButton
     }
-
-    override func viewWillDisappear(_ animated: Bool) {
-        if !self.isMovingFromParentViewController {
-            MasterViewController.instance?.personDidLeaveRoom(roomName: roomName!);
+    
+    func back(sender: UIBarButtonItem) {
+        MasterViewController.instance?.personDidLeaveRoom(roomName: roomName!);
+        //_ = navigationController?.popViewController(animated: true)
+        DispatchQueue.main.async {
+            _ = self.navigationController?.popToRootViewController(animated: true)
         }
     }
     
+//    override func viewWillDisappear(_ animated: Bool) {/*
+//        if !self.isMovingFromParentViewController {
+//        }*/
+//    }
+//    
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
     }
@@ -51,7 +62,6 @@ class RoomViewController: UIViewController, UITableViewDataSource, UITableViewDe
         cell.textLabel!.text = players![indexPath.row]
         return cell
     }
-
     
     var roomName: String? {
         didSet {
@@ -67,31 +77,39 @@ class RoomViewController: UIViewController, UITableViewDataSource, UITableViewDe
         alert.addAction(cancel);
         self.present(alert, animated: true, completion: nil)
         isAdmin = true;
-        let addButton = UIBarButtonItem(barButtonSystemItem: .play, target: self, action: #selector(playGame(_:)))
-        self.navigationItem.rightBarButtonItem = addButton
+        let playButton = UIBarButtonItem(barButtonSystemItem: .play, target: self, action: #selector(playGame(_:)))
+        self.navigationItem.rightBarButtonItem = playButton
         if (players?.count)! < 2 { //if less than two players, disable the play button
             self.navigationItem.rightBarButtonItem?.isEnabled = false;
         }
     }
     
-    func playGame(_ sender: Any) {
-        if isAdmin {
-            MasterViewController.instance?.notifyGameBegin(roomName: roomName!);
-        }
-        //wait
-        gameAlert = UIAlertController(title: "Game Play", message: "Game begins in \(countdownTime)", preferredStyle: UIAlertControllerStyle.alert)
-        
-        timer = Timer.scheduledTimer(timeInterval: 1.0, target: self, selector: #selector(updateTime(_:)), userInfo: nil, repeats: true)
-        
+    @objc func playGame(_ sender: Any) {
+        MasterViewController.instance?.notifyGameBegin();
+        countdownStart();
+        self.navigationItem.rightBarButtonItem?.isEnabled = false;
+    }
+    
+    func countdownStart() {
+        gameAlert = UIAlertController(title: "Game Play", message: "Game begins in \(countdownTime) seconds...", preferredStyle: UIAlertControllerStyle.alert)
+        //timer = Timer.scheduledTimer(timeInterval: 1.0, target: self, selector: #selector(updateTime), userInfo: nil, repeats: true)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 5, execute: { //wait for operations to complete on other ends before allowing the creation of a new room
+            self.gameAlert.dismiss(animated: true, completion: nil)
+            self.performSegue(withIdentifier: "showGame", sender: self)
+        })
         self.present(gameAlert, animated: true, completion: nil)
     }
     
-    @objc func updateTime(_ sender: Any) {
+    @objc func updateTime(_ timer: Timer) {
+        print("updating time function called")
         countdownTime -= 1;
         gameAlert.message = "Game begins in \(countdownTime)";
         if (countdownTime == 0) {
             print("game begins");
             timer.invalidate();
+            self.timer = nil;
+            gameAlert.dismiss(animated: true, completion: nil)
+            performSegue(withIdentifier: "showGame", sender: self)
         }
     }
     

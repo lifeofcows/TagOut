@@ -14,7 +14,7 @@ class PlayerServiceManager : NSObject {
     // and can contain only ASCII lowercase letters, numbers and hyphens.
     private let PlayerServiceType = "tagout-service"
     
-    private let myPeerId = MCPeerID(displayName: UIDevice.current.name)
+    private var myPeerId: MCPeerID;// = MCPeerID(displayName: UIDevice.current.name);
     
     private let serviceAdvertiser : MCNearbyServiceAdvertiser
     private let serviceBrowser : MCNearbyServiceBrowser
@@ -29,7 +29,8 @@ class PlayerServiceManager : NSObject {
         return session
     }()
     
-    override init() {
+    init(name: String) {
+        myPeerId = MCPeerID(displayName: name);
         self.serviceAdvertiser = MCNearbyServiceAdvertiser(peer: myPeerId, discoveryInfo: nil, serviceType: PlayerServiceType)
         self.serviceBrowser = MCNearbyServiceBrowser(peer: myPeerId, serviceType: PlayerServiceType)
         
@@ -44,12 +45,21 @@ class PlayerServiceManager : NSObject {
             MasterViewController.instance?.navigationItem.rightBarButtonItem?.isEnabled = true;
         })
     }
-    
-    func send(obj : Any) {
+   
+    func send(obj : Any, peerStr: String) {
         if session.connectedPeers.count > 0 {
             do {
-                let json = try? JSONSerialization.data(withJSONObject: obj, options: [])
-                try self.session.send(json!, toPeers: session.connectedPeers, with: .reliable)
+                let json = try? JSONSerialization.data(withJSONObject: ["OBJ":obj], options: [])
+                if peerStr == "" { //if peer name not given, assume to message all connected peers
+                    try self.session.send(json!, toPeers: session.connectedPeers, with: .reliable)
+                }
+                else {
+                    for peer in session.connectedPeers {
+                        if peer.displayName == peerStr {
+                            try self.session.send(json!, toPeers: [peer], with: .reliable)
+                        }
+                    }
+                }
             }
             catch let error {
                 NSLog("%@", "Error for sending: \(error)")
@@ -107,8 +117,9 @@ extension PlayerServiceManager : MCSessionDelegate {
         else {
             stateStr = "Connected!"
             if (!Verified) { //a mobile device connected, so send all apps an update in roomData.
-                send(obj: (delegate?.getRooms())!);
+                send(obj: (delegate?.getRooms())!, peerStr: "");
             }
+            print("connectedPeers are: ")
         }
         NSLog("%@", "peer \(peerID) didChangeState: \(stateStr): \(state.rawValue)")
         
@@ -119,10 +130,13 @@ extension PlayerServiceManager : MCSessionDelegate {
     func session(_ session: MCSession, didReceive data: Data, fromPeer peerID: MCPeerID) {
         NSLog("%@", "didReceiveData: \(data)")
         print("got room data!!");
-        if let roomObject = try? JSONSerialization.jsonObject(with: data, options: []) as! [[String: [String]]] {
+        
+        let fromJson = try? JSONSerialization.jsonObject(with: data, options: []) as! [String: Any]
+        
+        if let roomObject = (fromJson?["OBJ"] as? [[String: [String]]]) {
             self.delegate?.roomsChanged(rooms: roomObject)
         }
-        else if (try? JSONSerialization.jsonObject(with: data, options: []) as! Bool) != nil { //game began
+        else if let _ = fromJson?["OBJ"] as? Bool {  //game began
             self.delegate?.gameBegin()
         }
         else { //other object (position)

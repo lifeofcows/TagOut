@@ -13,7 +13,7 @@ class MasterViewController: UITableViewController {
     var roomViewController: RoomViewController? = nil
     var objects = [Any]()
     
-    let playerService = PlayerServiceManager()
+    var playerService: PlayerServiceManager! = nil;
     @IBOutlet var table: UITableView!
     weak var roomCreationAction : UIAlertAction?
     
@@ -29,7 +29,7 @@ class MasterViewController: UITableViewController {
         didSet {
             if didUpdateRooms == false { //prevent from making an infinite loop
                 print("sending didUpdateRooms msg");
-                playerService.send(obj: rooms);
+                playerService?.send(obj: rooms, peerStr: "");
             }
             if (!didGetRooms) { //wait until rooms are loaded (set by another peer) then turn on userInteraction
                 didGetRooms = true;
@@ -53,9 +53,10 @@ class MasterViewController: UITableViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         MasterViewController.instance = self;
-        playerService.delegate = self;
         table.isUserInteractionEnabled = false; //turn off user interaction until table is fully loaded
         userName = randomString(length: 6);
+        playerService = PlayerServiceManager(name: userName!) //init player service with username
+        playerService.delegate = self;
         print("userName is \(userName!)")
         let addButton = UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(createRoom(_:)))
         self.navigationItem.rightBarButtonItem = addButton
@@ -116,8 +117,15 @@ class MasterViewController: UITableViewController {
         self.roomCreationAction?.isEnabled = (text! != "") //now need to only check if nothing entered
     }
     
-    func notifyGameBegin(roomName: String) {
-        
+    func notifyGameBegin() { //function notifies all peers in the room that the game is beginning, including the admin
+        for room in rooms {
+            if let playerArray = room[currRoomName!] {
+                for player in playerArray {
+                    playerService.send(obj: true, peerStr: player);
+                }
+                return;
+            }
+        }
     }
     
     func printAllRooms() {
@@ -130,7 +138,7 @@ class MasterViewController: UITableViewController {
     func personDidLeaveRoom(roomName: String) {
         currRoomName = nil;
         print("person leaving room");
-        for i in 0...rooms.count-1 {
+        for i in 0..<rooms.count {
             if let room = rooms[i][roomName] {
                 let index = room.index(of: userName!);
                 var personArray = room
@@ -153,11 +161,11 @@ class MasterViewController: UITableViewController {
         if segue.identifier == "showRoom" { //segue for room selector
             controller = (segue.destination as! UINavigationController).topViewController as! RoomViewController?
             controller?.navigationItem.leftBarButtonItem = self.splitViewController?.displayModeButtonItem
-            controller?.navigationItem.leftItemsSupplementBackButton = true
-            
+            //controller?.navigationItem.leftItemsSupplementBackButton = true
+            controller?.navigationItem.hidesBackButton = true
+
             if let indexPath = self.tableView.indexPathForSelectedRow {
                 addToRoom(index: indexPath.row);
-                
             }
             else { //segue for room creator
                 let currRoom = rooms[creatorRoomIndex];
@@ -218,7 +226,7 @@ extension MasterViewController : PlayerServiceManagerDelegate {
     
     func connectedDevicesChanged(connectedDevices: [String]) {
         DispatchQueue.main.async {
-            print("Connections: \(connectedDevices)"); //update here
+            print("Connections: \(connectedDevices)");
         }
     }
     
@@ -237,7 +245,8 @@ extension MasterViewController : PlayerServiceManagerDelegate {
     }
     
     func gameBegin() {
-        RoomViewController.instance?.playGame(_: Any)
+        print("gameBegin gets called!")
+        RoomViewController.instance?.countdownStart();
     }
     /*various issues:
      don't show room if at least one player in room is not within wifi/bluetooth viscinity. (later problem)
