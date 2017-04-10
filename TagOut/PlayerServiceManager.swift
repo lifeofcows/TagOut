@@ -1,5 +1,6 @@
 import Foundation
 import MultipeerConnectivity
+import CoreLocation
 
 protocol PlayerServiceManagerDelegate {
     func connectedDevicesChanged(connectedDevices: [String])
@@ -9,7 +10,6 @@ protocol PlayerServiceManagerDelegate {
 }
 
 class PlayerServiceManager : NSObject {
-
     // Service type must be a unique string, at most 15 characters long
     // and can contain only ASCII lowercase letters, numbers and hyphens.
     private let PlayerServiceType = "tagout-service"
@@ -49,7 +49,8 @@ class PlayerServiceManager : NSObject {
     func send(obj : Any, peerStr: String) {
         if session.connectedPeers.count > 0 {
             do {
-                let json = try? JSONSerialization.data(withJSONObject: ["OBJ":obj], options: [])
+                //let string = String(data: obj as! Data, encoding: .ascii)!
+                let json = try? JSONSerialization.data(withJSONObject: ["OBJ": obj], options: [])
                 if peerStr == "" { //if peer name not given, assume to message all connected peers
                     try self.session.send(json!, toPeers: session.connectedPeers, with: .reliable)
                 }
@@ -128,12 +129,19 @@ extension PlayerServiceManager : MCSessionDelegate {
     }
     
     func session(_ session: MCSession, didReceive data: Data, fromPeer peerID: MCPeerID) {
-        NSLog("%@", "didReceiveData: \(data)")
-        print("got room data!!");
-        
+        NSLog("%@", "didReceiveData: \(data)")        
         let fromJson = try? JSONSerialization.jsonObject(with: data, options: []) as! [String: Any]
         
-        if let roomObject = (fromJson?["OBJ"] as? [[String: [String]]]) {
+        if let requester = fromJson?["OBJ"] as? String { //send coordinate data to requester
+            let coords = (GameViewController.instance?.coordinates[(MasterViewController.instance?.userName)!])! as! CLLocationCoordinate2D;
+            let dict = ["LATITUDE": coords.latitude, "LONGITUDE": coords.longitude, "NAME" : (MasterViewController.instance?.userName)!] as [String : Any]
+            send(obj: dict as Any, peerStr: requester);
+        }
+        else if let coordinates = fromJson?["OBJ"] as? [String: Any] {
+            let coordinate: CLLocationCoordinate2D = CLLocationCoordinate2DMake(coordinates["LATITUDE"] as! CLLocationDegrees, coordinates["LONGITUDE"] as! CLLocationDegrees);
+            GameViewController.instance?.coordinates[coordinates["NAME"] as! String] = coordinate
+        }
+        else if let roomObject = (fromJson?["OBJ"] as? [[String: [String]]]) { //send room update
             self.delegate?.roomsChanged(rooms: roomObject)
         }
         else if let _ = fromJson?["OBJ"] as? Bool {  //game began

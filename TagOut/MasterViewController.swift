@@ -6,6 +6,7 @@
 //  Copyright © 2017 Maxim Kuzmenko. All rights reserved.
 
 import UIKit
+import CoreLocation
 
 class MasterViewController: UITableViewController {
     
@@ -128,6 +129,19 @@ class MasterViewController: UITableViewController {
         }
     }
     
+    //wait for 0.5 seconds to receive data
+    func getCoordinates() {
+        for room in rooms {
+            if let playerArray = room[currRoomName!] {
+                for player in playerArray {
+                    if player != userName {
+                        playerService.send(obj: userName, peerStr: player); //get coordinates to everyone in room except current user
+                    }
+                }
+            }
+        }
+    }
+    
     func printAllRooms() {
         for room in rooms {
             let roomNameTxt = ([String] (room.keys))[0];
@@ -143,7 +157,7 @@ class MasterViewController: UITableViewController {
                 let index = room.index(of: userName!);
                 var personArray = room
                 personArray.remove(at: index!);
-                if personArray.count == 0 {
+                if personArray.count == 0 { //remove room if no more players
                     rooms.remove(at: i);
                     table.reloadData();
                 }
@@ -161,8 +175,7 @@ class MasterViewController: UITableViewController {
         if segue.identifier == "showRoom" { //segue for room selector
             controller = (segue.destination as! UINavigationController).topViewController as! RoomViewController?
             controller?.navigationItem.leftBarButtonItem = self.splitViewController?.displayModeButtonItem
-            //controller?.navigationItem.leftItemsSupplementBackButton = true
-            controller?.navigationItem.hidesBackButton = true
+            controller?.navigationItem.leftItemsSupplementBackButton = true
 
             if let indexPath = self.tableView.indexPathForSelectedRow {
                 addToRoom(index: indexPath.row);
@@ -248,6 +261,9 @@ extension MasterViewController : PlayerServiceManagerDelegate {
         print("gameBegin gets called!")
         RoomViewController.instance?.countdownStart();
     }
+    
+    
+    
     /*various issues:
      don't show room if at least one player in room is not within wifi/bluetooth viscinity. (later problem)
      room doesnt update sometimes for some reason

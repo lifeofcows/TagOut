@@ -15,14 +15,6 @@
 		1006035E1E974E440091A361 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 1006035C1E974E440091A361 /* LaunchScreen.storyboard */; };
 		100603691E974E440091A361 /* TagOutTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100603681E974E440091A361 /* TagOutTests.swift */; };
 		100603741E974E440091A361 /* TagOutUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100603731E974E440091A361 /* TagOutUITests.swift */; };
-		100603821E974F2F0091A361 /* AcceptorReactor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100603811E974F2F0091A361 /* AcceptorReactor.swift */; };
-		100603851E974F600091A361 /* Event.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100603841E974F600091A361 /* Event.swift */; };
-		100603871E974F680091A361 /* EventHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100603861E974F680091A361 /* EventHandler.swift */; };
-		100603891E974F750091A361 /* EventStream.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100603881E974F750091A361 /* EventStream.swift */; };
-		1006038B1E974F7D0091A361 /* Handlers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1006038A1E974F7D0091A361 /* Handlers.swift */; };
-		1006038D1E974F890091A361 /* JSONEventStream.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1006038C1E974F890091A361 /* JSONEventStream.swift */; };
-		1006038F1E974F990091A361 /* Reactor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1006038E1E974F990091A361 /* Reactor.swift */; };
-		100603911E974F9F0091A361 /* ReactorImpl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100603901E974F9F0091A361 /* ReactorImpl.swift */; };
 		1006039C1E9752440091A361 /* GCDAsyncSocket.m in Sources */ = {isa = PBXBuildFile; fileRef = 1006039B1E9752440091A361 /* GCDAsyncSocket.m */; };
 		1006039F1E975C640091A361 /* PlayerServiceManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1006039E1E975C640091A361 /* PlayerServiceManager.swift */; };
 		102C45361E9A0BF700781BF9 /* GameViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 102C45351E9A0BF700781BF9 /* GameViewController.swift */; };
@@ -60,14 +52,6 @@
 		1006036F1E974E440091A361 /* TagOutUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = TagOutUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		100603731E974E440091A361 /* TagOutUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagOutUITests.swift; sourceTree = "<group>"; };
 		100603751E974E440091A361 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		100603811E974F2F0091A361 /* AcceptorReactor.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AcceptorReactor.swift; sourceTree = "<group>"; };
-		100603841E974F600091A361 /* Event.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Event.swift; sourceTree = "<group>"; };
-		100603861E974F680091A361 /* EventHandler.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EventHandler.swift; sourceTree = "<group>"; };
-		100603881E974F750091A361 /* EventStream.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EventStream.swift; sourceTree = "<group>"; };
-		1006038A1E974F7D0091A361 /* Handlers.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Handlers.swift; sourceTree = "<group>"; };
-		1006038C1E974F890091A361 /* JSONEventStream.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = JSONEventStream.swift; sourceTree = "<group>"; };
-		1006038E1E974F990091A361 /* Reactor.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Reactor.swift; sourceTree = "<group>"; };
-		100603901E974F9F0091A361 /* ReactorImpl.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ReactorImpl.swift; sourceTree = "<group>"; };
 		100603991E9752430091A361 /* TagOut-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "TagOut-Bridging-Header.h"; sourceTree = "<group>"; };
 		1006039A1E9752440091A361 /* GCDAsyncSocket.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GCDAsyncSocket.h; path = TagOut/GCDAsyncSocket.h; sourceTree = "<group>"; };
 		1006039B1E9752440091A361 /* GCDAsyncSocket.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = GCDAsyncSocket.m; path = TagOut/GCDAsyncSocket.m; sourceTree = "<group>"; };
@@ -131,7 +115,6 @@
 				100603551E974E440091A361 /* RoomViewController.swift */,
 				1006039E1E975C640091A361 /* PlayerServiceManager.swift */,
 				102C45351E9A0BF700781BF9 /* GameViewController.swift */,
-				100603831E974F320091A361 /* Server */,
 				100603571E974E440091A361 /* Main.storyboard */,
 				1006035A1E974E440091A361 /* Assets.xcassets */,
 				1006035C1E974E440091A361 /* LaunchScreen.storyboard */,
@@ -156,21 +139,6 @@
 				100603751E974E440091A361 /* Info.plist */,
 			);
 			path = TagOutUITests;
-			sourceTree = "<group>";
-		};
-		100603831E974F320091A361 /* Server */ = {
-			isa = PBXGroup;
-			children = (
-				100603811E974F2F0091A361 /* AcceptorReactor.swift */,
-				100603841E974F600091A361 /* Event.swift */,
-				100603861E974F680091A361 /* EventHandler.swift */,
-				100603881E974F750091A361 /* EventStream.swift */,
-				1006038A1E974F7D0091A361 /* Handlers.swift */,
-				1006038C1E974F890091A361 /* JSONEventStream.swift */,
-				1006038E1E974F990091A361 /* Reactor.swift */,
-				100603901E974F9F0091A361 /* ReactorImpl.swift */,
-			);
-			name = Server;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -312,18 +280,10 @@
 			buildActionMask = 2147483647;
 			files = (
 				100603561E974E440091A361 /* RoomViewController.swift in Sources */,
-				100603911E974F9F0091A361 /* ReactorImpl.swift in Sources */,
-				100603891E974F750091A361 /* EventStream.swift in Sources */,
-				1006038B1E974F7D0091A361 /* Handlers.swift in Sources */,
-				100603871E974F680091A361 /* EventHandler.swift in Sources */,
-				1006038F1E974F990091A361 /* Reactor.swift in Sources */,
-				1006038D1E974F890091A361 /* JSONEventStream.swift in Sources */,
-				100603821E974F2F0091A361 /* AcceptorReactor.swift in Sources */,
 				100603541E974E440091A361 /* MasterViewController.swift in Sources */,
 				100603521E974E440091A361 /* AppDelegate.swift in Sources */,
 				102C45361E9A0BF700781BF9 /* GameViewController.swift in Sources */,
 				1006039C1E9752440091A361 /* GCDAsyncSocket.m in Sources */,
-				100603851E974F600091A361 /* Event.swift in Sources */,
 				1006039F1E975C640091A361 /* PlayerServiceManager.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
