@@ -10,7 +10,7 @@ import UIKit
 import CoreLocation
 
 class GameViewController: UIViewController, CLLocationManagerDelegate, UITableViewDelegate, UITableViewDataSource {
-    //my coords: latitude37.785834000000001, longitude: -122.406417)
+    //locations = 45.3117417544549 -75.9263544157855
     @IBOutlet weak var table: UITableView!
     @IBOutlet weak var shootAgain: UILabel!
     @IBOutlet weak var tagLivesLabel: UILabel!
@@ -20,13 +20,15 @@ class GameViewController: UIViewController, CLLocationManagerDelegate, UITableVi
     var playersSender: Bool = false;
     var playerLivesSender: Bool = false;
     var heading: CLLocationDirection? = nil;
-    let angleErrorMargin: Double = 4;
+    let angleErrorMargin: Double = 10;
     var shotTimer: Timer = Timer();
     let shotCountdownConst: Int = 5;
     var shotCountdownTime: Int = -1;
     var gameEndTimer: Timer = Timer();
-    var gameCountdownConst: Int = 120;
+    var gameCountdownConst: Int = 10;
     var gameCountdownTime: Int = -1;
+    var tagCount: Int = 0;
+    var tagLives: Int = 3;
     let userName: String = (MasterViewController.instance?.userName!)!
     var lastPosition: CLLocationCoordinate2D!;
     
@@ -34,43 +36,39 @@ class GameViewController: UIViewController, CLLocationManagerDelegate, UITableVi
     var needCoordsFrom: [String] = []
     var coordinates: [String: CLLocationCoordinate2D] = [:] { //name andcoordinates. array of players: inside, array of data (0th index = name, 1st is coords))
         didSet {
+            if oldValue.count >= coordinates.count || oldValue.count == 0 {
+                return;
+            }
+            
             let newPlayers = Set(coordinates.keys)
             let oldPlayers = Set(oldValue.keys);
             
-            var checkPlayers = Array(newPlayers.symmetricDifference(oldPlayers)); //find players who need to be checked
+            let checkPlayers = Array(newPlayers.symmetricDifference(oldPlayers)); //find players who need to be checked
+            
+            print("checkPlayers is \(checkPlayers)")
             
             for player in checkPlayers {
-                
-            }
-            
-            
-            /*
-            let players = coordinates.keys;
-            for i in players {
-                print("player \(i)'s coordinates are: \(coordinates[i])");
-            }
-            
-            var temp = needCoordsFrom;
-            
-            for i in 0..<needCoordsFrom.count {
-                print("i is \(i) and needCoordsFrom.count is \(needCoordsFrom.count)");
-                let player = needCoordsFrom[i];
-                if players.contains(player) {
-                    let coord = coordinates[needCoordsFrom[i]];
-                    print("coord is \(coord)");
-                    if coord?.latitude != 0 && coord?.longitude != 0 {
-                        print("temp.count is")
-                        temp.remove(at: i);
-                        if didIntersect(oppName: player) {
-                            print("did intersect")
-                        }
-                        else {
-                            print("did not intersect");
-                        }
+                let coord = coordinates[player];
+                if coord?.latitude != 0 && coord?.longitude != 0 {
+                    if didIntersect(oppName: player) {
+                        print("did intersect");
+                        tagCount += 1;
+                        taggedLabel.text = "\(tagCount)"
+                        let lives = playerLives[player]! - 1;
+                        playerLivesSender = true;
+                        playerLives[player] = lives
+                    }
+                    else {
+                        print("did not intersect");
                     }
                 }
             }
-            needCoordsFrom = temp;*/
+            
+            if coordinates.count + 1 >= players.count {
+                print("clearing coordinates dict...")
+                coordinates = [:]
+                coordinates[userName] = lastPosition;
+            }
         }
     }
     
@@ -78,10 +76,22 @@ class GameViewController: UIViewController, CLLocationManagerDelegate, UITableVi
         let oppCoord = coordinates[oppName];
         let userCoord = coordinates[userName];
         
+        print("oppCoord is \(oppCoord!) and userCoord is \(userCoord!)")
+        
         let latDiff = (oppCoord?.latitude)! - (userCoord?.latitude)!
         let longDiff = (oppCoord?.longitude)! - (userCoord?.longitude)!
         
-        let angle = atan2(latDiff, longDiff) * (180/Double.pi);
+        print("latDiff is \(latDiff) and longDiff is \(longDiff)")
+        
+        var angle = atan2(latDiff, longDiff) * (180/Double.pi);
+        
+        if angle < 0 {
+            angle += 360
+        }
+        
+        //print("latDiff is \(latDiff) and longDiff is \(longDiff)");
+        
+        print("angle is \(angle), and abs(heading! - angle) is \(abs(heading! - angle)) and heading is \(heading!)")
         
         if (abs(heading! - angle) < angleErrorMargin) {
             return true;
@@ -94,6 +104,9 @@ class GameViewController: UIViewController, CLLocationManagerDelegate, UITableVi
             if playersSender {
                 
             }
+            if players.count == 1 { //if one person left in the game, send game end message
+                gameEnd();
+            }
             DispatchQueue.main.async {
                 self.table.reloadData();
             }
@@ -102,20 +115,31 @@ class GameViewController: UIViewController, CLLocationManagerDelegate, UITableVi
     
     var playerLives: [String : Int] = [:] {
         didSet {
-            //sort players by lives, highest to lowest, then
-            if playerLivesSender {
-                //send notification to all players
-            }
+            players = players.sorted(by: {(p1: String, p2: String) -> Bool in
+                return (playerLives[p1]! < playerLives[p2]!);
+            })
             for i in 0..<players.count { //remove player lives
                 if playerLives[players[i]] == 0 {
                     players.remove(at: i);
                 }
+            }
+            if playerLivesSender {
+                MasterViewController.instance?.updatePlayerLives(playerLives: playerLives);
+                playerLivesSender = false;
             }
             DispatchQueue.main.async {
                 self.table.reloadData();
             }
         }
     }
+    
+//    func didGetTagged() {
+//        tagLives -= 1
+//        tagLivesLabel.text = "\(tagLives)"
+//        if (tagLives == 0) { //spectate
+//            
+//        }
+//    }
     
     @IBAction func tagAction(_ sender: Any) {
         tagButton.isEnabled = false;
@@ -125,12 +149,6 @@ class GameViewController: UIViewController, CLLocationManagerDelegate, UITableVi
         let index = needCoordsFrom.index(of: userName)
         needCoordsFrom.remove(at: index!);
         MasterViewController.instance?.getCoordinates();
-        //check for intersection 1 second after requesting data
-        
-        
-        //fetch location data from other people
-        //for location data in locationDataArray received
-        //see if anything intersects
     }
     
     
@@ -152,7 +170,7 @@ class GameViewController: UIViewController, CLLocationManagerDelegate, UITableVi
         
         GameViewController.instance = self
         
-        coordinates[userName] = CLLocationCoordinate2DMake(37.785834000000001,-122.406417)//37.785834000000001, longitude: -122.406417)
+        coordinates[userName] = CLLocationCoordinate2DMake(45.311717656483232,-75.92637570581951)//45.311717656483232, longitude: -75.92637570581951
         players = (RoomViewController.instance?.players)!;
         
         for player in players { //initialize all players with 5 lives
@@ -182,7 +200,6 @@ class GameViewController: UIViewController, CLLocationManagerDelegate, UITableVi
         }
         
         gameEndTimer = Timer.scheduledTimer(timeInterval: 1.0, target: self, selector: #selector(gameTimer), userInfo: nil, repeats: true)
-        
     }
     
     func gameTimer() { //shows time in minutes
@@ -192,12 +209,24 @@ class GameViewController: UIViewController, CLLocationManagerDelegate, UITableVi
         var temp = gameCountdownTime;
         let minutes = Int(floor(Double(temp/60)));
         temp = temp%60;
-        timeLabel.text = "\(minutes):\(temp)"
+        if temp < 10 {
+            timeLabel.text = "\(minutes):0\(temp)"
+        }
+        else {
+            timeLabel.text = "\(minutes):\(temp)"
+        }
         gameCountdownTime -= 1;
     }
     
-    func gameEnd() {
+    func gameEnd() { //UNCOMMENT!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         GameViewController.instance = nil;
+        let alert = UIAlertController(title: "The Game has Ended! \(players[0]) has won.", message: "", preferredStyle: UIAlertControllerStyle.alert)
+        let OK = UIAlertAction(title: "OK", style: UIAlertActionStyle.cancel, handler: { (_) -> Void in
+            _ = self.navigationController?.popViewController(animated: true)
+        })
+        
+        alert.addAction(OK);
+        self.present(alert, animated: true, completion: nil)
     }
     
     func locationManager(_ manager: CLLocationManager, didUpdateHeading heading: CLHeading) {
@@ -206,11 +235,13 @@ class GameViewController: UIViewController, CLLocationManagerDelegate, UITableVi
     }
     
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) { //update location if location has changes
-        if (lastPosition?.latitude != manager.location?.coordinate.latitude && lastPosition?.longitude != manager.location?.coordinate.longitude) {
-            lastPosition = manager.location!.coordinate
-            coordinates[userName] = lastPosition;
-            print("locations = \((lastPosition?.latitude)!) \((lastPosition?.longitude)!)")
-        }
+        //if (lastPosition?.latitude != manager.location?.coordinate.latitude && lastPosition?.longitude != manager.location?.coordinate.longitude) {
+            if Int(round((manager.location?.coordinate.latitude)!)) != 38 { //have to fix computer redirection coordinates for testing
+                lastPosition = manager.location!.coordinate
+                coordinates[userName] = lastPosition;
+                print("locations = \((lastPosition?.latitude)!) \((lastPosition?.longitude)!)")
+            }
+        //}
     }
     
     public func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {

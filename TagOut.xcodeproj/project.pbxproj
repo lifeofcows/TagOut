@@ -18,6 +18,7 @@
 		1006039C1E9752440091A361 /* GCDAsyncSocket.m in Sources */ = {isa = PBXBuildFile; fileRef = 1006039B1E9752440091A361 /* GCDAsyncSocket.m */; };
 		1006039F1E975C640091A361 /* PlayerServiceManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1006039E1E975C640091A361 /* PlayerServiceManager.swift */; };
 		102C45361E9A0BF700781BF9 /* GameViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 102C45351E9A0BF700781BF9 /* GameViewController.swift */; };
+		10AF78711E9C74570077288A /* IntroViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10AF78701E9C74570077288A /* IntroViewController.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -57,6 +58,7 @@
 		1006039B1E9752440091A361 /* GCDAsyncSocket.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = GCDAsyncSocket.m; path = TagOut/GCDAsyncSocket.m; sourceTree = "<group>"; };
 		1006039E1E975C640091A361 /* PlayerServiceManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PlayerServiceManager.swift; sourceTree = "<group>"; };
 		102C45351E9A0BF700781BF9 /* GameViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GameViewController.swift; sourceTree = "<group>"; };
+		10AF78701E9C74570077288A /* IntroViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = IntroViewController.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -111,9 +113,10 @@
 			isa = PBXGroup;
 			children = (
 				100603511E974E440091A361 /* AppDelegate.swift */,
+				1006039E1E975C640091A361 /* PlayerServiceManager.swift */,
+				10AF78701E9C74570077288A /* IntroViewController.swift */,
 				100603531E974E440091A361 /* MasterViewController.swift */,
 				100603551E974E440091A361 /* RoomViewController.swift */,
-				1006039E1E975C640091A361 /* PlayerServiceManager.swift */,
 				102C45351E9A0BF700781BF9 /* GameViewController.swift */,
 				100603571E974E440091A361 /* Main.storyboard */,
 				1006035A1E974E440091A361 /* Assets.xcassets */,
@@ -281,6 +284,7 @@
 			files = (
 				100603561E974E440091A361 /* RoomViewController.swift in Sources */,
 				100603541E974E440091A361 /* MasterViewController.swift in Sources */,
+				10AF78711E9C74570077288A /* IntroViewController.swift in Sources */,
 				100603521E974E440091A361 /* AppDelegate.swift in Sources */,
 				102C45361E9A0BF700781BF9 /* GameViewController.swift in Sources */,
 				1006039C1E9752440091A361 /* GCDAsyncSocket.m in Sources */,

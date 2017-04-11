@@ -29,6 +29,13 @@ class RoomViewController: UIViewController, UITableViewDataSource, UITableViewDe
         }
     }
     
+    override func viewDidAppear(_ animated: Bool) {
+        if inGame && isAdmin {
+            self.navigationItem.rightBarButtonItem?.isEnabled = true;
+        }
+        inGame = false;
+    }
+    
     override func viewWillDisappear(_ animated: Bool) {
         if !inGame {
             MasterViewController.instance?.personDidLeaveRoom(roomName: roomName!);
@@ -90,20 +97,6 @@ class RoomViewController: UIViewController, UITableViewDataSource, UITableViewDe
         })
         self.present(gameAlert, animated: true, completion: nil)
     }
-    
-    
-//    @objc func updateTime(_ timer: Timer) {
-//        print("updating time function called")
-//        countdownTime -= 1;
-//        gameAlert.message = "Game begins in \(countdownTime)";
-//        if (countdownTime == 0) {
-//            print("game begins");
-//            timer.invalidate();
-//            self.timer = nil;
-//            gameAlert.dismiss(animated: true, completion: nil)
-//            performSegue(withIdentifier: "showGame", sender: self)
-//        }
-//    }
     
     var players: [String]? {
         didSet {

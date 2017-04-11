@@ -41,16 +41,13 @@ class PlayerServiceManager : NSObject {
         
         self.serviceBrowser.delegate = self
         self.serviceBrowser.startBrowsingForPeers()
-        DispatchQueue.main.asyncAfter(deadline: .now() + 3.5, execute: { //wait for operations to complete on other ends before allowing the creation of a new room
-            MasterViewController.instance?.navigationItem.rightBarButtonItem?.isEnabled = true;
-        })
+
     }
    
-    func send(obj : Any, peerStr: String) {
+    func send(obj : Any, peerStr: String, type: String) {
         if session.connectedPeers.count > 0 {
             do {
-                //let string = String(data: obj as! Data, encoding: .ascii)!
-                let json = try? JSONSerialization.data(withJSONObject: ["OBJ": obj], options: [])
+                let json = try? JSONSerialization.data(withJSONObject: ["TYPE": type, "OBJ": obj], options: [])
                 if peerStr == "" { //if peer name not given, assume to message all connected peers
                     try self.session.send(json!, toPeers: session.connectedPeers, with: .reliable)
                 }
@@ -118,7 +115,7 @@ extension PlayerServiceManager : MCSessionDelegate {
         else {
             stateStr = "Connected!"
             if (!Verified) { //a mobile device connected, so send all apps an update in roomData.
-                send(obj: (delegate?.getRooms())!, peerStr: "");
+                send(obj: (delegate?.getRooms())!, peerStr: "", type: "UPDATE_ROOMS");
             }
             print("connectedPeers are: ")
         }
@@ -132,23 +129,32 @@ extension PlayerServiceManager : MCSessionDelegate {
         NSLog("%@", "didReceiveData: \(data)")        
         let fromJson = try? JSONSerialization.jsonObject(with: data, options: []) as! [String: Any]
         
-        if let requester = fromJson?["OBJ"] as? String { //send coordinate data to requester
+        let type = fromJson?["TYPE"] as! String
+        
+        if type == "GET_COORDS" { //send coordinate data to requester
+            let requester = fromJson?["OBJ"] as! String;
             let coords = (GameViewController.instance?.coordinates[(MasterViewController.instance?.userName)!])! as! CLLocationCoordinate2D;
             let dict = ["LATITUDE": coords.latitude, "LONGITUDE": coords.longitude, "NAME" : (MasterViewController.instance?.userName)!] as [String : Any]
-            send(obj: dict as Any, peerStr: requester);
+            send(obj: dict as Any, peerStr: requester, type: "SEND_COORDS");
         }
-        else if let coordinates = fromJson?["OBJ"] as? [String: Any] {
+        else if type == "SEND_COORDS" {
+            let coordinates = fromJson?["OBJ"] as! [String: Any];
             let coordinate: CLLocationCoordinate2D = CLLocationCoordinate2DMake(coordinates["LATITUDE"] as! CLLocationDegrees, coordinates["LONGITUDE"] as! CLLocationDegrees);
             GameViewController.instance?.coordinates[coordinates["NAME"] as! String] = coordinate
         }
-        else if let roomObject = (fromJson?["OBJ"] as? [[String: [String]]]) { //send room update
-            self.delegate?.roomsChanged(rooms: roomObject)
+        else if type == "UPDATE_LIVES" {
+            let playerLives = fromJson?["OBJ"] as! [String: Int];
+            GameViewController.instance?.playerLives = playerLives;
         }
-        else if let _ = fromJson?["OBJ"] as? Bool {  //game began
+        else if type == "UPDATE_ROOMS" { //send room update
+            let roomObject = fromJson?["OBJ"] as! [[String: [String]]];
+            self.delegate?.roomsChanged(rooms: roomObject);
+        }
+        else if type == "GAME_BEGIN" {  //game began
             self.delegate?.gameBegin()
         }
         else { //other object (position)
-            
+            print("OTHER");
         }
     }
     

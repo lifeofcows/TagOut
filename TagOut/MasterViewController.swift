@@ -30,7 +30,7 @@ class MasterViewController: UITableViewController {
         didSet {
             if didUpdateRooms == false { //prevent from making an infinite loop
                 print("sending didUpdateRooms msg");
-                playerService?.send(obj: rooms, peerStr: "");
+                playerService?.send(obj: rooms, peerStr: "", type: "UPDATE_ROOMS");
             }
             if (!didGetRooms) { //wait until rooms are loaded (set by another peer) then turn on userInteraction
                 didGetRooms = true;
@@ -50,7 +50,7 @@ class MasterViewController: UITableViewController {
             }
         }
     }
-    
+        
     override func viewDidLoad() {
         super.viewDidLoad()
         MasterViewController.instance = self;
@@ -61,11 +61,12 @@ class MasterViewController: UITableViewController {
         print("userName is \(userName!)")
         let addButton = UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(createRoom(_:)))
         self.navigationItem.rightBarButtonItem = addButton
-        self.navigationItem.rightBarButtonItem?.isEnabled = false;
+        self.navigationItem.rightBarButtonItem?.isEnabled = true;
         if let split = self.splitViewController {
             let controllers = split.viewControllers
             self.roomViewController = (controllers[controllers.count-1] as! UINavigationController).topViewController as? RoomViewController
         }
+        self.navigationItem.hidesBackButton = true
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -122,26 +123,33 @@ class MasterViewController: UITableViewController {
         for room in rooms {
             if let playerArray = room[currRoomName!] {
                 for player in playerArray {
-                    playerService.send(obj: true, peerStr: player);
+                    playerService.send(obj: true, peerStr: player, type: "GAME_BEGIN");
                 }
                 return;
             }
         }
     }
     
-    //wait for 0.5 seconds to receive data
-    func getCoordinates() {
+    func sendToAllExceptUser(obj: Any, type: String) {
         for room in rooms {
             if let playerArray = room[currRoomName!] {
                 for player in playerArray {
                     if player != userName {
-                        playerService.send(obj: userName, peerStr: player); //get coordinates to everyone in room except current user
+                        playerService.send(obj: obj, peerStr: player, type: type); //get coordinates to everyone in room except current user
                     }
                 }
             }
         }
     }
     
+    func getCoordinates() {
+        sendToAllExceptUser(obj: userName, type: "GET_COORDS");
+    }
+    
+    func updatePlayerLives(playerLives: [String: Int]) {
+        sendToAllExceptUser(obj: playerLives, type: "UPDATE_LIVES");
+    }
+
     func printAllRooms() {
         for room in rooms {
             let roomNameTxt = ([String] (room.keys))[0];
@@ -261,11 +269,4 @@ extension MasterViewController : PlayerServiceManagerDelegate {
         print("gameBegin gets called!")
         RoomViewController.instance?.countdownStart();
     }
-    
-    
-    
-    /*various issues:
-     don't show room if at least one player in room is not within wifi/bluetooth viscinity. (later problem)
-     room doesnt update sometimes for some reason
-     */
 }
