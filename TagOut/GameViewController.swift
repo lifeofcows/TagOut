@@ -26,7 +26,7 @@ class GameViewController: UIViewController, CLLocationManagerDelegate, UITableVi
     let shotCountdownConst: Int = 3;
     var shotCountdownTime: Int = -1;
     var gameEndTimer: Timer = Timer();
-    var gameCountdownConst: Int = 400;
+    var gameCountdownConst: Int = 180;
     var gameCountdownTime: Int = -1;
     var tagCount: Int = 0;
     var tagLives: Int = 3;
@@ -78,12 +78,12 @@ class GameViewController: UIViewController, CLLocationManagerDelegate, UITableVi
         let oppCoord = coordinates[oppName];
         let userCoord = coordinates[userName];
         
-        print("oppCoord is \(oppCoord!) and userCoord is \(userCoord!)")
+        //print("oppCoord is \(oppCoord!) and userCoord is \(userCoord!)")
         
         let latDiff = (oppCoord?.latitude)! - (userCoord?.latitude)!
         let longDiff = (oppCoord?.longitude)! - (userCoord?.longitude)!
         
-        print("latDiff is \(latDiff) and longDiff is \(longDiff)")
+        //print("latDiff is \(latDiff) and longDiff is \(longDiff)")
         
         var angle = atan2(latDiff, longDiff)*(180/Double.pi)
         
@@ -106,6 +106,7 @@ class GameViewController: UIViewController, CLLocationManagerDelegate, UITableVi
         return false;
     }
     
+    
     var players: [String] = [] { //players who are in game
         didSet {
             if players.count == 1 { //if one person left in the game, send game end message
@@ -115,6 +116,7 @@ class GameViewController: UIViewController, CLLocationManagerDelegate, UITableVi
         }
     }
     
+    //Dictionary of player lives;
     var playerLives: [String : Int] = [:] {
         didSet {
             if playerLivesSender {
@@ -146,15 +148,18 @@ class GameViewController: UIViewController, CLLocationManagerDelegate, UITableVi
             }
         }
     }
-
+    
+    //When the person presses the tag button
     @IBAction func tagAction(_ sender: Any) {
-        tagButton.isEnabled = false;
-        shootAgain.text = "Shoot again in \(shotCountdownConst)"
-        shotTimer = Timer.scheduledTimer(timeInterval: 1.0, target: self, selector: #selector(updateTime(_:)), userInfo: nil, repeats: true)
-        MasterViewController.instance?.getCoordinates();
+        if (heading! != nil) { //only tag if compass is not null
+            tagButton.isEnabled = false;
+            shootAgain.text = "Shoot again in \(shotCountdownConst)"
+            shotTimer = Timer.scheduledTimer(timeInterval: 1.0, target: self, selector: #selector(updateTime(_:)), userInfo: nil, repeats: true)
+            MasterViewController.instance?.getCoordinates();
+        }
     }
     
-    
+    //function to update the global time
     @objc func updateTime(_ sender: Any) {
         shotCountdownTime -= 1;
         shootAgain.text = "Shoot again in \(shotCountdownTime)"
@@ -234,7 +239,7 @@ class GameViewController: UIViewController, CLLocationManagerDelegate, UITableVi
         let alert = UIAlertController(title: "Game Over", message: message, preferredStyle: UIAlertControllerStyle.alert)
         let OK = UIAlertAction(title: "OK", style: UIAlertActionStyle.cancel, handler: { (_) -> Void in
             if self.players.count < 2 || self.gameCountdownTime < 1 {
-                _ = self.navigationController?.popViewController(animated: true)
+                _ = self.navigationController?.popViewController(animated: true) //pop view controller and go back to the room menu
             }
         })
         
@@ -247,15 +252,11 @@ class GameViewController: UIViewController, CLLocationManagerDelegate, UITableVi
         self.heading = heading.magneticHeading;
     }
     
-    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) { //update location if location has changes
-        //if (lastPosition?.latitude != manager.location?.coordinate.latitude && lastPosition?.longitude != manager.location?.coordinate.longitude) {
+    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) { //update location if location has changes; only send location if horizontal accuracy is at least 10, and on computers prevent from redirecting to San Francisco (default redirection location if there is no CLLocation provideded for device)
         if Int(round((manager.location?.coordinate.latitude)!)) != 38 && ((manager.location?.horizontalAccuracy)! < Double(10)) { //have to fix computer redirection coordinates for testing
             lastPosition = manager.location!.coordinate
             coordinates[userName] = lastPosition;
-            //print("locations = \((lastPosition?.latitude)!) \((lastPosition?.longitude)!)")
-            //print("horizontal accuracy is \(manager.location?.horizontalAccuracy)")
         }
-        //}
     }
     
     public func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
