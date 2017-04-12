@@ -275,7 +275,7 @@
                         <outlet property="tagButton" destination="TZT-Gg-kke" id="TBk-JK-1Af"/>
                         <outlet property="tagLivesLabel" destination="ZKT-Zy-Vy2" id="h8q-nA-OS7"/>
                         <outlet property="taggedLabel" destination="YkJ-kC-0Yd" id="62w-W9-BM5"/>
-                        <outlet property="timeLabel" destination="GqE-MS-rZt" id="khq-5b-sRa"/>
+                        <outlet property="timeLabel" destination="GqE-MS-rZt" id="FQ4-p7-l0X"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="GIU-7b-QvE" userLabel="First Responder" sceneMemberID="firstResponder"/>

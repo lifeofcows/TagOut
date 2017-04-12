@@ -8,6 +8,7 @@
 
 import UIKit
 
+//IntroViewController: Class is responsible for showing the main image, as well as asking the user for a username
 class IntroViewController: UIViewController {
 
     @IBOutlet weak var imageView: UIImageView!
@@ -16,17 +17,14 @@ class IntroViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        imageView.image = #imageLiteral(resourceName: "fullSize");
+        imageView.image = #imageLiteral(resourceName: "fullSize"); //set image to intro image
         imageView.frame = self.view.frame
         imageView.contentMode = .scaleAspectFit
         imageView.isUserInteractionEnabled = false;
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: {
-            self.performSegue(withIdentifier: "showMaster", sender: self);
-        });
     }
 
-    override func viewDidAppear(_ animated: Bool) {
-        //promptForUsername();
+    override func viewDidAppear(_ animated: Bool) { //as soon as view is loaded, prompt the user for their username
+        promptForUsername();
     }
     
     func promptForUsername() {
@@ -52,30 +50,18 @@ class IntroViewController: UIViewController {
     
     @objc private func textChanged(_ sender:Any) {
         let text = (sender as! UITextField).text
-        self.nameAction?.isEnabled = (text! != "") //now need to only check if nothing entered
+        self.nameAction?.isEnabled = (text! != "") // check if nothing entered.
     }
-    /*
-    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+    
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) { //pass the username when segue occurs
         if (segue.identifier == "showMaster") {
             let destinationVC :MasterViewController = segue.destination as! MasterViewController
             destinationVC.userName = name
         }
-    }*/
+    }
     
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
         // Dispose of any resources that can be recreated.
     }
-    
-
-    /*
-    // MARK: - Navigation
-
-    // In a storyboard-based application, you will often want to do a little preparation before navigation
-    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        // Get the new view controller using segue.destinationViewController.
-        // Pass the selected object to the new view controller.
-    }
-    */
-
 }

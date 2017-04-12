@@ -8,6 +8,9 @@
 import UIKit
 import CoreLocation
 
+
+//MasterViewController: Responsible for Showing the Main Menu, as well as being the class that carries most of the 
+//Data for the user throughout the game. It is also used as a delegate for the other classes.
 class MasterViewController: UITableViewController {
     
     static var instance: MasterViewController!;
@@ -55,7 +58,7 @@ class MasterViewController: UITableViewController {
         super.viewDidLoad()
         MasterViewController.instance = self;
         table.isUserInteractionEnabled = false; //turn off user interaction until table is fully loaded
-        userName = randomString(length: 6);
+        //userName = randomString(length: 6);
         playerService = PlayerServiceManager(name: userName!) //init player service with username
         playerService.delegate = self;
         print("userName is \(userName!)")

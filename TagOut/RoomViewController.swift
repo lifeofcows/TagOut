@@ -8,6 +8,7 @@
 
 import UIKit
 
+//RoomViewController class: Responsible for
 class RoomViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
     
     @IBOutlet weak var table: UITableView!
@@ -60,12 +61,13 @@ class RoomViewController: UIViewController, UITableViewDataSource, UITableViewDe
         return cell
     }
     
-    var roomName: String? {
+    var roomName: String? { //sets room
         didSet {
             self.title = "Room: \(roomName!)";
         }
     }
     
+    //function notifies the new administrator
     func adminNotification() {
         let alert = UIAlertController(title: "You are now admin!", message: "", preferredStyle: UIAlertControllerStyle.alert)
         let cancel = UIAlertAction(title: "OK", style: UIAlertActionStyle.cancel, handler: { (_) -> Void in

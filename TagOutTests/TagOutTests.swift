@@ -7,23 +7,37 @@
 //
 
 import XCTest
+import CoreLocation
+
 @testable import TagOut
 
 class TagOutTests: XCTestCase {
     
+    var master: MasterViewController = MasterViewController();
+    var room: RoomViewController!;
+    var game: GameViewController!;
+    var players = ["Bob", "Andy"];
+    var playersLives = ["Bob": 5, "Andy": 5]
+    var coordinates = ["Bob" : CLLocationCoordinate2DMake(45.310813000000003, -75.926181), "Andy": CLLocationCoordinate2DMake(45.311749172439157, -75.926238745521687)]
+    
     override func setUp() {
         super.setUp()
-        // Put setup code here. This method is called before the invocation of each test method in the class.
+        
+        master.userName = "Andy";
+        room = RoomViewController();
+        game = GameViewController();
+        game.players = players;
+        game.playerLives = playersLives;
+        game.heading = 195.980346679688;
+        
+        XCTAssertEqual(true, game.didIntersect(oppName: "Bob")) //Basic testing
+        game.heading = 240
+        XCTAssertEqual(false, game.didIntersect(oppName: "Bob")) //Basic testing
     }
     
     override func tearDown() {
         // Put teardown code here. This method is called after the invocation of each test method in the class.
         super.tearDown()
-    }
-    
-    func testExample() {
-        // This is an example of a functional test case.
-        // Use XCTAssert and related functions to verify your tests produce the correct results.
     }
     
     func testPerformanceExample() {

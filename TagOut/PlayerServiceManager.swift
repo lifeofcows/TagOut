@@ -9,6 +9,7 @@ protocol PlayerServiceManagerDelegate {
     func gameBegin();
 }
 
+//Class: PlayerServiceManager. Responsible for the Multipeer Connectivity; responsible for passing ALL information between different users.
 class PlayerServiceManager : NSObject {
     // Service type must be a unique string, at most 15 characters long
     // and can contain only ASCII lowercase letters, numbers and hyphens.
@@ -41,10 +42,10 @@ class PlayerServiceManager : NSObject {
         
         self.serviceBrowser.delegate = self
         self.serviceBrowser.startBrowsingForPeers()
-
+        
     }
-   
-    func send(obj : Any, peerStr: String, type: String) {
+    
+    func send(obj : Any, peerStr: String, type: String) { //function wraps data in a JSON object and sends to designated peers
         if session.connectedPeers.count > 0 {
             do {
                 let json = try? JSONSerialization.data(withJSONObject: ["TYPE": type, "OBJ": obj], options: [])
@@ -100,8 +101,7 @@ extension PlayerServiceManager : MCNearbyServiceBrowserDelegate {
         NSLog("%@", "lostPeer: \(peerID)")
     }
 }
-
-
+//A delegate for the session. Functions implemented below.
 extension PlayerServiceManager : MCSessionDelegate {
     
     func session(_ session: MCSession, peer peerID: MCPeerID, didChange state: MCSessionState) {
@@ -115,7 +115,10 @@ extension PlayerServiceManager : MCSessionDelegate {
         else {
             stateStr = "Connected!"
             if (!Verified) { //a mobile device connected, so send all apps an update in roomData.
-                send(obj: (delegate?.getRooms())!, peerStr: "", type: "UPDATE_ROOMS");
+                //wait half a second before updating
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: {
+                    self.send(obj: (self.delegate?.getRooms())!, peerStr: "", type: "UPDATE_ROOMS");
+                });
             }
             print("connectedPeers are: ")
         }
@@ -126,25 +129,29 @@ extension PlayerServiceManager : MCSessionDelegate {
     }
     
     func session(_ session: MCSession, didReceive data: Data, fromPeer peerID: MCPeerID) {
-        NSLog("%@", "didReceiveData: \(data)")        
+        NSLog("%@", "didReceiveData: \(data)")
         let fromJson = try? JSONSerialization.jsonObject(with: data, options: []) as! [String: Any]
         
-        let type = fromJson?["TYPE"] as! String
+        let type = fromJson?["TYPE"] as! String //get the type
         
         if type == "GET_COORDS" { //send coordinate data to requester
-            let requester = fromJson?["OBJ"] as! String;
+            let requester = fromJson?["OBJ"] as! String; //sent to user, now the user will send back the requester their coordinates
             let coords = (GameViewController.instance?.coordinates[(MasterViewController.instance?.userName)!])! as! CLLocationCoordinate2D;
-            let dict = ["LATITUDE": coords.latitude, "LONGITUDE": coords.longitude, "NAME" : (MasterViewController.instance?.userName)!] as [String : Any]
-            send(obj: dict as Any, peerStr: requester, type: "SEND_COORDS");
+            if coords != nil { //if coordinates for the other player haven't been loaded yet, don't send anything
+                let dict = ["LATITUDE": coords.latitude, "LONGITUDE": coords.longitude, "NAME" : (MasterViewController.instance?.userName)!] as [String : Any]
+                send(obj: dict as Any, peerStr: requester, type: "SEND_COORDS");
+            }
         }
-        else if type == "SEND_COORDS" {
+        else if type == "SEND_COORDS" { //receives coordinates; updates their coordinates in their GameViewController.
             let coordinates = fromJson?["OBJ"] as! [String: Any];
             let coordinate: CLLocationCoordinate2D = CLLocationCoordinate2DMake(coordinates["LATITUDE"] as! CLLocationDegrees, coordinates["LONGITUDE"] as! CLLocationDegrees);
             GameViewController.instance?.coordinates[coordinates["NAME"] as! String] = coordinate
         }
-        else if type == "UPDATE_LIVES" {
+        else if type == "UPDATE_LIVES" { //players receive lives update.
             let playerLives = fromJson?["OBJ"] as! [String: Int];
-            GameViewController.instance?.playerLives = playerLives;
+            if (GameViewController.instance != nil) {
+                GameViewController.instance?.playerLives = playerLives;
+            }
         }
         else if type == "UPDATE_ROOMS" { //send room update
             let roomObject = fromJson?["OBJ"] as! [[String: [String]]];
@@ -153,8 +160,8 @@ extension PlayerServiceManager : MCSessionDelegate {
         else if type == "GAME_BEGIN" {  //game began
             self.delegate?.gameBegin()
         }
-        else { //other object (position)
-            print("OTHER");
+        else { //other object. If reaches here then there is an error!
+            print("OTHER. ERROR!");
         }
     }
     
