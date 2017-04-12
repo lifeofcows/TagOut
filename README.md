@@ -11,7 +11,7 @@ When you open the app, you will be prompted to enter you user name.
 <img src="GitHubImages/1.png" width="180"> 
 
 After that, you will be redirected to the Main Menu. In here, you will see all the rooms open on the WiFi network.
-Unfortunately, sometimes rooms do not appear on launch and on connection to the other person. To fix this problem, the player hosting the room must exit and create a new room. This is due to the Multipeer Connectivity framework that could potentially make the other player disconnect. Only then will the room be shown.
+Unfortunately, sometimes rooms do not appear on launch and on connection to the other person. To fix this problem, the player hosting the room must exit and create a new room. Only then will the room be shown.
 
 <img src="GitHubImages/2.png" width="180"> 
 
